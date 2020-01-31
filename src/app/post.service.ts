@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { stringify } from 'querystring';
 import { Post } from './post.model';
-import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { map, catchError } from 'rxjs/operators';
+import { Subject, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +30,12 @@ export class PostService {
   fetchPosts(){
     return this.http
       .get<{[key: string]: Post}>(
-         'https://angular-complete-guide-790d5.firebaseio.com/posts.json')
+         'https://angular-complete-guide-790d5.firebaseio.com/posts.json',
+          {
+            headers: new HttpHeaders({'Custom-Header': 'Hello'}),
+            params: new HttpParams().set('print','pretty')
+          }
+         )
          .pipe(map(responseData=>{
            const postArray =[];
            console.log(responseData);
@@ -40,8 +45,12 @@ export class PostService {
             }
            }
            return postArray;
-         }))
-         }
+         }),
+         catchError(errorRes =>{
+           //send to analytics server
+          return throwError(errorRes);
+         })
+         )}
 
         deletePosts(){
           return this.http.delete('https://angular-complete-guide-790d5.firebaseio.com/posts.json');
